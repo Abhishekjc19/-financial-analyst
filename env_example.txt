@@ -1,0 +1,28 @@
+# Financial Analyst Environment Configuration
+
+# Flask Configuration
+SECRET_KEY=your-secret-key-here-change-in-production
+FLASK_DEBUG=True
+LOG_LEVEL=INFO
+
+# API Keys (Get these from respective services)
+ALPHA_VANTAGE_API_KEY=your-alpha-vantage-api-key-here
+FRED_API_KEY=your-fred-api-key-here
+
+# Database Configuration (Optional)
+DATABASE_URL=sqlite:///financial_analyst.db
+
+# Redis Configuration (Optional, for caching)
+REDIS_URL=redis://localhost:6379
+
+# CORS Configuration
+CORS_ORIGINS=http://localhost:5000,http://127.0.0.1:5000
+
+# Performance Settings
+MAX_CONCURRENT_REQUESTS=10
+REQUEST_TIMEOUT=30
+
+# Chart Settings
+CHART_WIDTH=1200
+CHART_HEIGHT=600
+CHART_THEME=plotly_white 
