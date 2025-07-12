@@ -82,7 +82,10 @@
                 AI-powered stock market analysis combining technical indicators, macroeconomic data, and machine learning for informed trading decisions.
             </p>
             <div class="mb-4">
-                <a href="https://github.com/Abhishekjc19/-financial-analyst" class="btn btn-primary btn-lg me-3">
+                <a href="frontend/index.html" class="btn btn-primary btn-lg me-3">
+                    <i class="fas fa-chart-line me-2"></i>Launch Application
+                </a>
+                <a href="https://github.com/Abhishekjc19/-financial-analyst" class="btn btn-outline-primary btn-lg me-3">
                     <i class="fab fa-github me-2"></i>View on GitHub
                 </a>
                 <a href="https://github.com/Abhishekjc19/-financial-analyst/blob/main/README.md" class="btn btn-outline-primary btn-lg">
@@ -173,16 +176,23 @@
             <h3 class="text-center mb-4">Quick Start</h3>
             <div class="row">
                 <div class="col-md-6">
-                    <h5>Installation</h5>
-                    <pre class="bg-light p-3 rounded"><code>git clone https://github.com/Abhishekjc19/-financial-analyst.git
-cd financial-analyst
-pip install -r requirements.txt</code></pre>
+                    <h5>Backend Setup</h5>
+                    <pre class="bg-light p-3 rounded"><code>cd backend
+npm install
+npm start
+# Backend runs on http://localhost:3000</code></pre>
                 </div>
                 <div class="col-md-6">
-                    <h5>Run Application</h5>
-                    <pre class="bg-light p-3 rounded"><code>python run.py
-# Open http://localhost:5000</code></pre>
+                    <h5>Frontend Access</h5>
+                    <pre class="bg-light p-3 rounded"><code># Open frontend/index.html
+# Or visit the Launch Application button above
+# Note: Backend must be running for full functionality</code></pre>
                 </div>
+            </div>
+            <div class="alert alert-info mt-3">
+                <i class="fas fa-info-circle"></i>
+                <strong>Important:</strong> The frontend requires the backend server to be running on localhost:3000 for full functionality. 
+                For production deployment, deploy the backend to a cloud service and update the API_BASE_URL in the frontend.
             </div>
             <div class="text-center mt-4">
                 <a href="https://github.com/Abhishekjc19/-financial-analyst/blob/main/SETUP_GUIDE.md" class="btn btn-primary">
