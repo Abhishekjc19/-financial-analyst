@@ -43,7 +43,7 @@
     "redis": "^4.6.10",
     "node-cron": "^3.0.3",
     "axios": "^1.6.0",
-    "yfinance": "^2.36.4",
+    "yahoo-finance2": "^2.8.1",
     "technicalindicators": "^3.1.0",
     "moment": "^2.29.4",
     "lodash": "^4.17.21",

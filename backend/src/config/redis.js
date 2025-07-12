@@ -9,23 +9,9 @@ const createClient = () => {
     socket: {
       host: process.env.REDIS_HOST || 'localhost',
       port: process.env.REDIS_PORT || 6379,
-      connectTimeout: 10000,
-      lazyConnect: true
-    },
-    retry_strategy: (options) => {
-      if (options.error && options.error.code === 'ECONNREFUSED') {
-        logger.error('Redis server refused connection');
-        return new Error('Redis server refused connection');
-      }
-      if (options.total_retry_time > 1000 * 60 * 60) {
-        logger.error('Redis retry time exhausted');
-        return new Error('Redis retry time exhausted');
-      }
-      if (options.attempt > 10) {
-        logger.error('Redis max retry attempts reached');
-        return undefined;
-      }
-      return Math.min(options.attempt * 100, 3000);
+      connectTimeout: 5000,
+      lazyConnect: true,
+      reconnectStrategy: false // Disable automatic reconnection
     }
   };
 
@@ -69,7 +55,7 @@ const connectRedis = async () => {
 
 const getClient = () => {
   if (!client) {
-    throw new Error('Redis not connected. Call connectRedis() first.');
+    return null; // Return null instead of throwing error
   }
   return client;
 };
@@ -84,8 +70,13 @@ const closeRedis = async () => {
 // Cache helper functions
 const setCache = async (key, value, ttl = 3600) => {
   try {
+    const redisClient = getClient();
+    if (!redisClient) {
+      logger.debug(`Cache not available, skipping set for key: ${key}`);
+      return;
+    }
     const serializedValue = typeof value === 'object' ? JSON.stringify(value) : value;
-    await getClient().setEx(key, ttl, serializedValue);
+    await redisClient.setEx(key, ttl, serializedValue);
     logger.debug(`Cache set: ${key}`);
   } catch (error) {
     logger.error(`Error setting cache for key ${key}:`, error);
@@ -94,7 +85,12 @@ const setCache = async (key, value, ttl = 3600) => {
 
 const getCache = async (key) => {
   try {
-    const value = await getClient().get(key);
+    const redisClient = getClient();
+    if (!redisClient) {
+      logger.debug(`Cache not available, returning null for key: ${key}`);
+      return null;
+    }
+    const value = await redisClient.get(key);
     if (value) {
       logger.debug(`Cache hit: ${key}`);
       try {

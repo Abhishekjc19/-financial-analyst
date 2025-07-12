@@ -164,13 +164,21 @@ process.on('uncaughtException', (error) => {
 // Start server
 async function startServer() {
   try {
-    // Connect to database
-    await connectDatabase();
-    logger.info('Database connected successfully');
+    // Connect to database (optional in development)
+    try {
+      await connectDatabase();
+      logger.info('Database connected successfully');
+    } catch (error) {
+      logger.warn('Database connection failed, running without database:', error.message);
+    }
 
-    // Connect to Redis
-    await connectRedis();
-    logger.info('Redis connected successfully');
+    // Connect to Redis (optional in development)
+    try {
+      await connectRedis();
+      logger.info('Redis connected successfully');
+    } catch (error) {
+      logger.warn('Redis connection failed, running without Redis:', error.message);
+    }
 
     // Start server
     app.listen(PORT, () => {

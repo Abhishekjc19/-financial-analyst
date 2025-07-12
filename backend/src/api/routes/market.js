@@ -1,5 +1,5 @@
 const express = require('express');
-const { query, validationResult } = require('express-validator');
+const { query, param, validationResult } = require('express-validator');
 const { logger } = require('../../utils/logger');
 const marketDataService = require('../../services/marketDataService');
 
@@ -7,7 +7,7 @@ const router = express.Router();
 
 // Validation rules
 const symbolValidation = [
-  query('symbol')
+  param('symbol')
     .isLength({ min: 1, max: 10 })
     .withMessage('Symbol must be between 1 and 10 characters')
     .matches(/^[A-Z.]+$/)

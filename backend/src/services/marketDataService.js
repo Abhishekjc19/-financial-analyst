@@ -1,4 +1,4 @@
-const yahooFinance = require('yfinance');
+const yahooFinance = require('yahoo-finance2');
 const axios = require('axios');
 const { logger } = require('../utils/logger');
 const { executeQuery } = require('../config/database');
@@ -9,6 +9,24 @@ class MarketDataService {
     this.cacheTTL = 300; // 5 minutes for market data
     this.alphaVantageKey = process.env.ALPHA_VANTAGE_API_KEY;
     this.fredApiKey = process.env.FRED_API_KEY;
+  }
+
+  // Helper method to convert period to days
+  getPeriodInDays(period) {
+    const periodMap = {
+      '1d': 1,
+      '5d': 5,
+      '1mo': 30,
+      '3mo': 90,
+      '6mo': 180,
+      '1y': 365,
+      '2y': 730,
+      '5y': 1825,
+      '10y': 3650,
+      'ytd': 365,
+      'max': 3650
+    };
+    return periodMap[period] || 365;
   }
 
   // Get stock data from Yahoo Finance
@@ -25,9 +43,9 @@ class MarketDataService {
 
       logger.info(`Fetching stock data for ${symbol} from Yahoo Finance`);
       
-      const ticker = yahooFinance.Ticker(symbol);
-      const data = await ticker.history({
-        period: period,
+      const data = await yahooFinance.historical(symbol, {
+        period1: new Date(Date.now() - this.getPeriodInDays(period) * 24 * 60 * 60 * 1000),
+        period2: new Date(),
         interval: interval
       });
 
@@ -70,8 +88,7 @@ class MarketDataService {
 
       logger.info(`Fetching real-time quote for ${symbol}`);
       
-      const ticker = yahooFinance.Ticker(symbol);
-      const quote = await ticker.quote;
+      const quote = await yahooFinance.quote(symbol);
 
       if (!quote) {
         throw new Error(`No quote found for symbol: ${symbol}`);
