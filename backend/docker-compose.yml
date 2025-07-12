@@ -1,0 +1,134 @@
+version: '3.8'
+
+services:
+  # PostgreSQL with TimescaleDB
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    container_name: financial_analyst_db
+    environment:
+      POSTGRES_DB: financial_analyst
+      POSTGRES_USER: financial_user
+      POSTGRES_PASSWORD: financial_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    networks:
+      - financial_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U financial_user -d financial_analyst"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis for caching and message queue
+  redis:
+    image: redis:7-alpine
+    container_name: financial_analyst_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - financial_network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Main API Server (Node.js)
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: financial_analyst_api
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://financial_user:financial_password@postgres:5432/financial_analyst
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: your-development-jwt-secret
+      JWT_REFRESH_SECRET: your-development-refresh-secret
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - financial_network
+    command: npm run dev
+
+  # Python ML Service
+  ml_service:
+    build:
+      context: ./ml_service
+      dockerfile: Dockerfile
+    container_name: financial_analyst_ml
+    environment:
+      DATABASE_URL: postgresql://financial_user:financial_password@postgres:5432/financial_analyst
+      REDIS_URL: redis://redis:6379
+      API_PORT: 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ml_service:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - financial_network
+    command: python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Data Ingestion Service
+  data_ingestion:
+    build:
+      context: ./data_ingestion
+      dockerfile: Dockerfile
+    container_name: financial_analyst_data
+    environment:
+      DATABASE_URL: postgresql://financial_user:financial_password@postgres:5432/financial_analyst
+      REDIS_URL: redis://redis:6379
+      YAHOO_FINANCE_API_KEY: ${YAHOO_FINANCE_API_KEY}
+      ALPHA_VANTAGE_API_KEY: ${ALPHA_VANTAGE_API_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - financial_network
+    command: python data_ingestion.py
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: financial_analyst_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - api
+      - ml_service
+    networks:
+      - financial_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  financial_network:
+    driver: bridge 
